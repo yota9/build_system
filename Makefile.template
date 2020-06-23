@@ -1,0 +1,55 @@
+.SECONDEXPANSION:
+MAKE_THREADS = -j4
+MAKEFLAGS = $(MAKE_THREADS)
+
+.DEFAULT_GOAL = all
+
+BUILD_DIR ?= $(CURDIR)
+OBJDIR = $(BUILD_DIR)/obj
+DISTDIR = $(BUILD_DIR)/dist
+BUILD_SYSTEM = build_system
+
+# verbosity
+V ?= @
+ifneq ($(V),)
+V_VAR_VALUES = @
+ifeq ($(filter $(V_VAR_VALUES), $(V)),)
+  $(error V variable must $(V_VAR_VALUES) or empty)
+endif
+endif
+
+.PHONY: clean
+## Clean produced files
+clean:
+
+SKIP_GOALS = clean cloc help
+ifneq ($(filter $(SKIP_GOALS), $(MAKECMDGOALS)),)
+  SKIP_MK_CHECK = true
+endif
+
+include $(BUILD_SYSTEM)/makefile_common.mk
+include $(BUILD_SYSTEM)/help.mk
+
+# Build system
+-include $(BUILD_DIR)/config.mk
+include $(BUILD_SYSTEM)/paths.mk
+include $(BUILD_SYSTEM)/toolchain.mk
+include $(BUILD_SYSTEM)/cflags.mk
+include $(BUILD_SYSTEM)/ldflags.mk
+include $(BUILD_SYSTEM)/checkconfig.mk
+include $(BUILD_SYSTEM)/macros.mk
+
+ifneq ($(SKIP_MK_CHECK), true)
+endif #SKIP_MK_CHECK
+
+.PHONY: mrproper
+## Make project clean
+mrproper: clean
+
+.PHONY: ccc-analyse
+## Run clang static analyser; Use SCAN_TARGET var to pass target if needed
+ccc-analyse: clean
+	scan-build -k --use-cc=$(CC) $(MAKE) $(SCAN_TARGET)
+
+## Main build target
+.PHONY: all
