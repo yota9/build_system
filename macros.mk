@@ -69,7 +69,11 @@ $(eval SRC_DIR_$(0) := $(strip $(3)))
 $(eval OBJ_DIR_$(0) := $(strip $(4)))
 $(eval CFLAGS_$(0) := $(strip $(5)) -I$(COMMON_PATH))
 
-$(eval OBJ_$(0) := $(OBJ_DIR_$(0))/$(SRC_$(0)).o)
+$(eval OBJ_NAME_$(0) := $(SRC_$(0)).o)
+$(eval OBJ_$(0) := $(OBJ_DIR_$(0))/$(OBJ_NAME_$(0)))
+
+$(eval MK_NAME_$(0) := $(subst $(CURDIR)/,,$(SRC_DIR_$(0)))/$(OBJ_NAME_$(0)))
+$(eval $(MK_NAME_$(0)) := $(OBJ_$(0)))
 
 $(OBJ_$(0)): CC = $(CC_$(0))
 $(call FILTER_OUT_TOOLCHAIN_FLAGS, $(CC_$(0)), $(OBJ_$(0)), $(CFLAGS_$(0)))
@@ -127,24 +131,6 @@ $(OBJ_$(0)): $(OBJ_FILES_$(0)) $(EXTRA_OBJS_$(0))
 	$(call LINK)
 endef
 
-define CREATE_SO_FROM_AR
-$(eval CC_$(0) := $(strip $(1)))
-$(eval OBJ_$(0) := $(strip $(2)))
-$(eval OBJ_DIR_$(0) := $(strip $(3)))
-$(eval LIBS_$(0) := $(strip $(4)))
-$(eval EXTRA_LIBS_$(0) := $(strip $(5)))
-$(eval CFLAGS_$(0) := $(strip $(6)))
-$(eval LDFLAGS_$(0) := $(strip $(7)) -Wl,--gc-sections)
-$(eval WHOLE_FLAGS_$(0) := -Wl,--whole-archive) #VAR
-$(eval WHOLE_LIBS_$(0) := $(addprefix $(WHOLE_FLAGS_$(0)) , $(LIBS_$(0)))) #VAR
-$(eval GROUP_ELIBS_$(0) := -Wl,--start-group $(EXTRA_LIBS_$(0)) -Wl,--end-group) #VAR
-
-TARGETS += $(OBJ_DIR_$(0))/$(OBJ_$(0))
-$(OBJ_DIR_$(0))/$(OBJ_$(0)): $(LIBS_$(0)) $(EXTRA_LIBS_$(0))| $$(DIRECTORY)
-	$(call RUN,LD, $(CC_$(0)) $(CFLAGS_COMMON) -shared $(CFLAGS_$(0)) $(WHOLE_LIBS_$(0)) $(GROUP_ELIBS_$(0)) -o $$@ $(LDFLAGS_$(0)))
-	@$(STRIP) $$@
-endef
-
 define CREATE_ARCHIVE
 # TODO use AR based on CC or remove CC param from other macroses
 $(eval OBJ_$(0) := $(strip $(1)))
@@ -180,15 +166,17 @@ $(eval CC_$(0) := $(strip $(1)))
 $(eval WORLD_$(0) := $(strip $(2)))
 $(eval SRC_$(0) := $(strip $(3)))
 $(eval SRC_DIR_$(0) := $(strip $(4)))
+$(eval SRC_DIR_NAME_$(0) := $(subst $(CURDIR)/,,$(SRC_DIR_$(0)))) #VAR
 $(eval NAME_$(0) := $(strip $(5)))
-$(eval OBJ_DIR_$(0) := $(OBJDIR)/$(SRC_DIR_$(0))) #VAR
+$(eval OBJ_DIR_$(0) := $(OBJDIR)/$(SRC_DIR_NAME_$(0))) #VAR
 $(eval OBJ_$(0) := $(OBJ_DIR_$(0))/$(NAME_$(0))) #VAR
 $(eval CFLAGS_$(0) := $(strip $(6)))
 $(eval LDFLAGS_$(0) := $(strip $(7)))
 $(eval LDLIBS_$(0) := $(strip $(8)))
 $(eval EXTRA_OBJS_$(0) := $(strip $(9)))
 
-$(eval $(SRC_DIR_$(0))/$(NAME_$(0)) := $(OBJ_$(0)))
+$(eval MK_NAME_$(0) := $(subst $(CURDIR)/,,$(SRC_DIR_$(0)))/$(NAME_$(0)))
+$(eval $(MK_NAME_$(0)) := $(OBJ_$(0)))
 
 $(call BUILD_ALL_OBJECTS, \
        $(CC_$(0)), \
@@ -209,42 +197,15 @@ $(call LINK_OBJECTS, \
 )
 endef
 
-define BUILD_BINARY
-$(eval CC_$(0) := $(strip $(1)))
-$(eval WORLD_$(0) := $(strip $(2)))
-$(eval SRC_$(0) := $(strip $(3)))
-$(eval SRC_DIR_$(0) := $(strip $(4)))
-$(eval OBJ_DIR_$(0) := $(OBJDIR)/$(SRC_DIR_$(0))) #VAR
-$(eval OBJ_ELF_$(0) := $(basename $(strip $(5))).elf)
-$(eval OBJ_$(0) := $(OBJ_DIR_$(0))/$(strip $(5)))
-$(eval CFLAGS_$(0) := $(strip $(6)))
-$(eval LDFLAGS_$(0) := $(strip $(7)))
-$(eval LDLIBS_$(0) := $(strip $(8)))
-
-$(call BUILD_EXECUTABLE, \
-       $(CC_$(0)), \
-       $(WORLD_$(0)), \
-       $(SRC_$(0)), \
-       $(SRC_DIR_$(0)), \
-       $(OBJ_ELF_$(0)), \
-       $(CFLAGS_$(0)), \
-       $(LDFLAGS_$(0)), \
-       $(LDLIBS_$(0)) \
-)
-
-TARGETS += $(OBJ_$(0))
-$(OBJ_$(0)): $(OBJ_DIR_$(0))/$(OBJ_ELF_$(0))
-	$(call RUN, OBJC, $$(OBJCOPY) -O binary $$< $$@)
-endef
-
 define BUILD_LIBRARY
 $(eval CC_$(0) := $(strip $(1)))
 $(eval WORLD_$(0) := $(strip $(2)))
 $(eval SRC_$(0) := $(strip $(3)))
 $(eval SRC_DIR_$(0) := $(strip $(4)))
+$(eval SRC_DIR_NAME_$(0) := $(subst $(CURDIR)/,,$(SRC_DIR_$(0)))) #VAR
 $(eval NAME_$(0) := $(strip $(5)))
 $(eval LIB_$(0) := lib$(NAME_$(0))) #VAR
-$(eval OBJ_DIR_$(0) := $(OBJDIR)/$(SRC_DIR_$(0))/$(LIB_$(0))) #VAR
+$(eval OBJ_DIR_$(0) := $(OBJDIR)/$(SRC_DIR_NAME_$(0))/$(LIB_$(0))) #VAR
 $(eval OBJ_$(0) := $(OBJ_DIR_$(0))/$(LIB_$(0))) #VAR
 $(eval CFLAGS_$(0) := $(strip $(6)))
 $(eval LDFLAGS_$(0) := $(strip $(7)))
@@ -261,8 +222,9 @@ $(call BUILD_ALL_OBJECTS, \
 $(eval OBJ_SO_LIBRARY_$(0) := $(OBJ_$(0)).so)
 $(eval OBJ_A_LIBRARY_$(0) := $(OBJ_$(0)).a)
 # Dependency variable ex. $(name/libname.so)
-$(eval $(NAME_$(0))/$(LIB_$(0)).so := $(OBJ_SO_LIBRARY_$(0)))
-$(eval $(NAME_$(0))/$(LIB_$(0)).a := $(OBJ_A_LIBRARY_$(0)))
+$(eval MK_NAME_$(0) := $(subst $(CURDIR)/,,$(SRC_DIR_$(0)))/$(LIB_$(0)))
+$(eval $(MK_NAME_$(0)).so := $(OBJ_SO_LIBRARY_$(0)))
+$(eval $(MK_NAME_$(0)).a := $(OBJ_A_LIBRARY_$(0)))
 
 $(call LINK_OBJECTS, \
        $(CC_$(0)), \
@@ -285,10 +247,12 @@ define BUILD_DTB
 $(eval DTC_$(0) := $(strip $(1)))
 $(eval SRC_$(0) := $(strip $(2)))
 $(eval SRC_DIR_$(0) := $(strip $(3)))
-$(eval OBJ_DIR_$(0) := $(OBJDIR)/$(SRC_DIR_$(0))/dtb) #VAR
+$(eval SRC_DIR_NAME_$(0) := $(subst $(CURDIR)/,,$(SRC_DIR_$(0)))) #VAR
+$(eval OBJ_DIR_$(0) := $(OBJDIR)/$(SRC_DIR_NAME_$(0))) #VAR
 $(eval OBJ_$(0) := $(OBJ_DIR_$(0))/$(subst .dts,.dtb,$(SRC_$(0)))) #VAR
 
-$(eval $(SRC_DIR_$(0))/$(SRC_$(0)) := $(OBJ_$(0)))
+$(eval MK_NAME_$(0) := $(subst $(CURDIR)/,,$(SRC_DIR_$(0)))/$(SRC_$(0)))
+$(eval $(MK_NAME_$(0)) := $(OBJ_$(0)))
 
 TARGETS += $(OBJ_$(0))
 $(OBJ_$(0)): DTC = $(DTC_$(0))
