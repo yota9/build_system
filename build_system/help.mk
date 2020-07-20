@@ -16,7 +16,7 @@ help:
 	@echo '  ${YELLOW}make${RESET} ${GREEN}<target>${RESET}'
 	@echo ''
 	@echo 'Targets:'
-	@awk '/^[a-zA-Z0-9-()_$$\/%@]+:/ { \
+	@awk '/^[a-zA-Z0-9()_$$\/%@_-]+:/ { \
 		helpMessage = match(lastLine, /^## (.*)/); \
 		if (helpMessage) { \
 			helpCommand = substr($$1, 0, index($$1, ":")); \
