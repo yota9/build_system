@@ -4,10 +4,11 @@ MAKEFLAGS = $(MAKE_THREADS)
 
 .DEFAULT_GOAL = all
 
-BUILD_DIR ?= $(CURDIR)
+BUILD_DIR ?= $(PWD)
 OBJDIR = $(BUILD_DIR)/obj
 DISTDIR = $(BUILD_DIR)/dist
-BUILD_SYSTEM = build_system
+
+BUILD_SYSTEM = $(CURDIR)/build_system
 
 # verbosity
 V ?= @
