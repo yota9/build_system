@@ -1,12 +1,12 @@
 DIRECTORY = $$(@D)/directory.checked
 %/directory.checked:
-	$(if $(V),, @echo MKDIR $(@D))
+	$(if $(strip $(Q)),, @echo MKDIR $(@D))
 	@mkdir -p $(@D)
 	@touch $@
 
 _RUN = @echo $(strip $(1)) $(strip $(2))
 
-ifeq ($(V),@)
+ifeq ($(Q),@)
   VERBOSITY_RUN = @$(strip $(1)) || (echo "$(strip $(1))"; exit 1)
 else
   VERBOSITY_RUN = $(strip $(1))
@@ -158,7 +158,7 @@ $(OBJ_$(0)): ARFLAGS = -rcT
 
 TARGETS += $(OBJ_$(0))
 $(OBJ_$(0)):
-	$(V) cd $$(@D) && $(AR_STR) $(ARCHIVES_$(0))
+	$(Q) cd $$(@D) && $(AR_STR) $(ARCHIVES_$(0))
 endef
 
 define BUILD_EXECUTABLE
