@@ -72,7 +72,7 @@ $(eval CFLAGS_$(0) := $(strip $(5)) -I$(COMMON_PATH))
 $(eval OBJ_NAME_$(0) := $(SRC_$(0)).o)
 $(eval OBJ_$(0) := $(OBJ_DIR_$(0))/$(OBJ_NAME_$(0)))
 
-$(eval MK_NAME_$(0) := $(subst $(CURDIR)/,,$(SRC_DIR_$(0)))/$(OBJ_NAME_$(0)))
+$(eval MK_NAME_$(0) := $(subst $(OBJDIR)/,,$(OBJ_DIR_$(0)))/$(OBJ_NAME_$(0)))
 $(eval $(MK_NAME_$(0)) := $(OBJ_$(0)))
 
 $(OBJ_$(0)): CC = $(CC_$(0))
@@ -168,7 +168,7 @@ $(eval SRC_$(0) := $(strip $(3)))
 $(eval SRC_DIR_$(0) := $(strip $(4)))
 $(eval SRC_DIR_NAME_$(0) := $(subst $(CURDIR)/,,$(SRC_DIR_$(0)))) #VAR
 $(eval NAME_$(0) := $(strip $(5)))
-$(eval OBJ_DIR_$(0) := $(OBJDIR)/$(SRC_DIR_NAME_$(0))) #VAR
+$(eval OBJ_DIR_$(0) := $(OBJDIR)/$(SRC_DIR_NAME_$(0))/$(NAME_$(0))) #VAR
 $(eval OBJ_$(0) := $(OBJ_DIR_$(0))/$(NAME_$(0))) #VAR
 $(eval CFLAGS_$(0) := $(strip $(6)))
 $(eval LDFLAGS_$(0) := $(strip $(7)))
