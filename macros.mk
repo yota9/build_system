@@ -67,7 +67,7 @@ $(eval CC_$(0) := $(strip $(1)))
 $(eval SRC_$(0) := $(strip $(2)))
 $(eval SRC_DIR_$(0) := $(strip $(3)))
 $(eval OBJ_DIR_$(0) := $(strip $(4)))
-$(eval CFLAGS_$(0) := $(strip $(5)) -I$(COMMON_PATH))
+$(eval CFLAGS_$(0) := $(strip $(5)) $(if $(COMMON_PATH),-I$(COMMON_PATH),))
 
 $(eval OBJ_NAME_$(0) := $(SRC_$(0)).o)
 $(eval OBJ_$(0) := $(OBJ_DIR_$(0))/$(OBJ_NAME_$(0)))
@@ -108,6 +108,13 @@ $(OBJ_$(0)): $(DEPEND_$(0))
 $(OBJ_$(0)): NEEDED_LIBS += $(DEPEND_$(0))
 endef
 
+define WHOLE_ARCHIVES
+$(eval OBJ_$(0) := $(strip $(1)))
+$(eval DEPEND_$(0) := $(strip $(2)))
+$(OBJ_$(0)): $(DEPEND_$(0))
+$(OBJ_$(0)): WHOLE_ARCHIVE_LIBS += $(DEPEND_$(0))
+endef
+
 define LINK_OBJECTS
 $(eval CC_$(0) := $(strip $(1)))
 $(eval OBJ_$(0) := $(strip $(2)))
@@ -123,7 +130,9 @@ $(eval OBJ_FILES_$(0) := $(addsuffix .o, $(OBJ_FILES_$(0))))
 
 $(OBJ_$(0)): CC = $(CC_$(0))
 $(call FILTER_OUT_TOOLCHAIN_FLAGS, $(CC_$(0)), $(OBJ_$(0)), $(LDFLAGS_$(0)))
-$(OBJ_$(0)): LDLIBS = -Wl,--start-group $$(NEEDED_LIBS) $(LDLIBS_$(0)) -Wl,--end-group
+$(OBJ_$(0)): LDLIBS = -Wl,--start-group $$(NEEDED_LIBS) $(LDLIBS_$(0)) \
+  -Wl,--whole-archive $$(WHOLE_ARCHIVE_LIBS) -Wl,--no-whole-archive \
+  -Wl,--end-group
 
 
 TARGETS += $(OBJ_$(0))
@@ -132,7 +141,7 @@ $(OBJ_$(0)): $(OBJ_FILES_$(0)) $(EXTRA_OBJS_$(0))
 endef
 
 define CREATE_ARCHIVE
-# TODO use AR based on CC or remove CC param from other macroses
+# TODO use AR based on CC or remove CC param from other macros
 $(eval OBJ_$(0) := $(strip $(1)))
 $(eval OBJ_DIR_$(0) := $(strip $(2)))
 $(eval SRC_$(0) := $(strip $(3)))
@@ -225,12 +234,13 @@ $(eval OBJ_A_LIBRARY_$(0) := $(OBJ_$(0)).a)
 $(eval MK_NAME_$(0) := $(subst $(CURDIR)/,,$(SRC_DIR_$(0)))/$(LIB_$(0)))
 $(eval $(MK_NAME_$(0)).so := $(OBJ_SO_LIBRARY_$(0)))
 $(eval $(MK_NAME_$(0)).a := $(OBJ_A_LIBRARY_$(0)))
+$(eval SO_LINK_FLAGS_$(0) := $(filter-out -pie, $(LDFLAGS_$(WORLD_$(0))) $(LDFLAGS_$(0))))
 
 $(call LINK_OBJECTS, \
        $(CC_$(0)), \
        $(OBJ_SO_LIBRARY_$(0)), \
        $(OBJ_DIR_$(0)), \
-       -shared $(LDFLAGS_$(WORLD_$(0))) $(LDFLAGS_$(0)), \
+       -shared $(SO_LINK_FLAGS_$(0)), \
        $(LDLIBS_$(WORLD_$(0))) $(LDLIBS_$(0)), \
        $(SRC_$(0)) \
 )
