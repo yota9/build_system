@@ -20,6 +20,7 @@ endif
 .PHONY: clean
 ## Clean produced files
 clean:
+	@rm -rf $(OBJDIR)
 
 mrproper:
 ## MRproper
@@ -39,14 +40,15 @@ include $(BUILD_SYSTEM)/help.mk
 
 # Build system
 -include $(BUILD_DIR)/config.mk
-ifdef ($(SKIP_MK_CHECK)
+ifdef ($(SKIP_MK_CHECK))
 include $(BUILD_SYSTEM)/checkconfig.mk
-endef
+endif
+
 include $(BUILD_SYSTEM)/paths.mk
 include $(BUILD_SYSTEM)/toolchain.mk
 include $(BUILD_SYSTEM)/cflags.mk
 include $(BUILD_SYSTEM)/ldflags.mk
-include $(BUILD_SYSTEM)/checkconfig.mk
+#include $(BUILD_SYSTEM)/checkconfig.mk
 -include $(BUILD_SYSTEM)/macros.mk
 
 ifneq ($(SKIP_MK_CHECK), true)
@@ -63,6 +65,8 @@ ccc-analyse: clean
 
 ## Main build target
 .PHONY: all
+all: $(TARGETS)
+	@:
 
 .PHONY: phony
 phony:
