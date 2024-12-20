@@ -1,0 +1,3 @@
+mainmenu "Project Configuration"
+
+source "build_system/kconfig/Kconfig.include"

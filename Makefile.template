@@ -9,6 +9,7 @@ OBJDIR = $(BUILD_DIR)/obj
 DISTDIR = $(BUILD_DIR)/dist
 
 BUILD_SYSTEM = $(CURDIR)/build_system
+KCONFIGDIR = $(BUILD_SYSTEM)/kconfig
 
 # verbosity
 ifeq ($(strip $(V))@,@)
@@ -52,6 +53,7 @@ include $(BUILD_SYSTEM)/ldflags.mk
 -include $(BUILD_SYSTEM)/macros.mk
 
 ifneq ($(SKIP_MK_CHECK), true)
+include $(KCONFIGDIR)/kconfig.mk
 endif #SKIP_MK_CHECK
 
 .PHONY: mrproper
@@ -62,6 +64,14 @@ mrproper: clean
 ## Run clang static analyser; Use SCAN_TARGET var to pass target if needed
 ccc-analyse: clean
 	scan-build -k --use-cc=$(CC) $(MAKE) $(SCAN_TARGET)
+
+.PHONY: menuconfig
+export KCONFIG_AUTOCONFIG=$(OBJDIR)/kconfig/auto.conf
+export KCONFIG_AUTOHEADER=$(OBJDIR)/kconfig/autoconf.h
+export KCONFIG_RUSTCCFG=$(OBJDIR)/kconfig/rustc_cfg
+## Run menuconfig
+menuconfig: $(build_system/kconfig/menuconfig)
+	@$< $(CURDIR)/Kconfig
 
 ## Main build target
 .PHONY: all
