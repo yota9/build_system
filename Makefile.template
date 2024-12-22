@@ -65,12 +65,19 @@ mrproper: clean
 ccc-analyse: clean
 	scan-build -k --use-cc=$(CC) $(MAKE) $(SCAN_TARGET)
 
-.PHONY: menuconfig
+export KCONFIG_CONFIG=config.mk
 export KCONFIG_AUTOCONFIG=$(OBJDIR)/kconfig/auto.conf
 export KCONFIG_AUTOHEADER=$(OBJDIR)/kconfig/autoconf.h
 export KCONFIG_RUSTCCFG=$(OBJDIR)/kconfig/rustc_cfg
+
+.PHONY: menuconfig
 ## Run menuconfig
 menuconfig: $(build_system/kconfig/menuconfig)
+	@$< $(CURDIR)/Kconfig
+
+.PHONY: nconfig
+## Run nconfig
+nconfig: $(build_system/kconfig/nconfig)
 	@$< $(CURDIR)/Kconfig
 
 ## Main build target
