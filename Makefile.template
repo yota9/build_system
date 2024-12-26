@@ -63,7 +63,7 @@ mrproper: clean
 .PHONY: ccc-analyse
 ## Run clang static analyser; Use SCAN_TARGET var to pass target if needed
 ccc-analyse: clean
-	scan-build -k --use-cc=$(CC) $(MAKE) $(SCAN_TARGET)
+	scan-build -k --status-bugs --use-cc=$(CC) $(MAKE) $(SCAN_TARGET)
 
 export KCONFIG_CONFIG=config.mk
 export KCONFIG_AUTOCONFIG=$(OBJDIR)/kconfig/auto.conf
